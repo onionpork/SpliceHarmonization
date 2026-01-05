@@ -3,10 +3,10 @@ From: rockylinux:8
 
 %labels
     Maintainer "SpliceHarmonization"
-    Description "Rocky Linux 8.10 container with SpliceHarmonization, rMATS, LeafCutter, StringTie, MAJIQ, and conda dependencies"
+    Description "Rocky Linux 8.10 container with SpliceHarmonization, rMATS, LeafCutter, StringTie, and conda dependencies"
 
 %environment
-    export PATH=/opt/conda/bin:/opt/conda/envs/spliceharmonization/bin:/opt/rmats-turbo:/opt/leafcutter:/opt/stringtie/bin:/opt/majiq/bin:${PATH}
+    export PATH=/opt/conda/bin:/opt/conda/envs/spliceharmonization/bin:/opt/rmats-turbo:/opt/leafcutter:/opt/stringtie/bin:${PATH}
     export CONDA_DEFAULT_ENV=spliceharmonization
     export LC_ALL=C
     export LANG=C
@@ -61,8 +61,9 @@ From: rockylinux:8
     cp /tmp/stringtie-${STRINGTIE_VERSION}.Linux_x86_64/stringtie /opt/stringtie/bin/
     rm -rf /tmp/stringtie-${STRINGTIE_VERSION}.Linux_x86_64 /tmp/stringtie.tar.gz
 
-    # Install MAJIQ from PyPI
-    pip install --no-deps "majiq>=2.4,<3.0"
+    # Optional MAJIQ install (requires a valid license). Not installed by default; if desired, follow the
+    # official MAJIQ installation guide (https://biociphers.bitbucket.io/majiq-docs-academic/getting-started-guide/installing.html)
+    # and add those steps to a derived definition or writable sandbox rather than using pip here.
 
     conda deactivate
 
@@ -72,8 +73,9 @@ From: rockylinux:8
     ../ /tmp/SpliceHarmonization
 
 %help
-    This image installs SpliceHarmonization along with rMATS, LeafCutter, StringTie, MAJIQ, and all conda dependencies
-    inside a Rocky Linux 8 base compatible with Singularity 2.x builds. After building:
+    This image installs SpliceHarmonization along with rMATS, LeafCutter, StringTie, and all conda dependencies
+    inside a Rocky Linux 8 base compatible with Singularity 2.x builds. MAJIQ is not bundled by default; licensed
+    users can extend the definition to install it (see install/Singularity.md). After building:
 
       singularity exec spliceharmonization.simg bash -lc "source /opt/conda/etc/profile.d/conda.sh; conda activate spliceharmonization; python /opt/SpliceHarmonization/src/spliceharmonization.py -cfig /path/to/config.yml"
 
