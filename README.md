@@ -39,6 +39,20 @@ SpliceHarmonization requires execution on a high-performance computing (HPC) pla
 - start SpliceHarmonization \
   `python ./spliceharmonization.py -cfig ./config.yml`
 
+### Testing
+- **Unit-style checks (configuration validation):**
+  - Ensure the conda environment from `install/install.yml` is active.
+  - Install `pytest` if it is not already present in your environment.
+  - From the repository root, create a `tests/` folder and add test cases that call `SplicePrepPipeline.checkConfig()` with temporary inputs. Example invocation once tests exist:
+    `pytest -q`
+- **Integration check with provided examples:**
+  - Use the sample configuration and input files in `test/config.yml`, `test/samplesheet.csv`, and `test/comparison.csv`.
+  - Run the pipeline locally with:
+    `python ./spliceharmonization.py -cfig ./config.yml`
+  - Verify that the output directory structure shown above is produced under `{output_path}` and that `{timestamp}_{userName}` contains the copied config and generated logs.
+- **Cluster/HPC considerations:**
+  - The pipeline submits jobs to an HPC scheduler; if your CI environment lacks a scheduler, consider mocking submission calls (e.g., `subprocess.run`) or running in a “dry run” mode that only generates command scripts.
+
 - Output tree view
 ```markdown
 {output_path} (#output directory)
