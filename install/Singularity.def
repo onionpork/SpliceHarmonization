@@ -1,0 +1,85 @@
+Bootstrap: docker
+From: rockylinux:8
+
+%labels
+    Maintainer "SpliceHarmonization"
+    Description "Rocky Linux 8.10 container with SpliceHarmonization, rMATS, LeafCutter, StringTie, and conda dependencies"
+
+%environment
+    export PATH=/opt/conda/bin:/opt/conda/envs/spliceharmonization/bin:/opt/rmats-turbo:/opt/leafcutter:/opt/stringtie/bin:${PATH}
+    export CONDA_DEFAULT_ENV=spliceharmonization
+    export LC_ALL=C
+    export LANG=C
+
+%post
+    set -euo pipefail
+    dnf -y update && dnf -y install epel-release
+    dnf -y install \
+        bzip2 \
+        ca-certificates \
+        curl \
+        gcc \
+        gcc-c++ \
+        git \
+        make \
+        openssl-devel \
+        tar \
+        wget \
+        which \
+        zlib-devel
+    dnf clean all
+
+    # Install Miniconda
+    curl -fsSL -o /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash /tmp/miniconda.sh -b -p /opt/conda
+    rm -f /tmp/miniconda.sh
+    source /opt/conda/etc/profile.d/conda.sh
+
+    # Copy repository and create environment
+    mkdir -p /opt/SpliceHarmonization
+    cp -r /tmp/SpliceHarmonization/* /opt/SpliceHarmonization/
+    conda env create -f /opt/SpliceHarmonization/install/install.yml -n spliceharmonization
+    conda clean -afy
+
+    # Activate environment for tool installs that are not managed by install.yml
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate spliceharmonization
+
+    # Install rMATS from source (https://github.com/Xinglab/rmats-turbo)
+    git clone https://github.com/Xinglab/rmats-turbo.git /opt/rmats-turbo
+    make -C /opt/rmats-turbo
+
+    # Install LeafCutter from source (https://github.com/davidaknowles/leafcutter)
+    git clone https://github.com/davidaknowles/leafcutter.git /opt/leafcutter
+    pip install --no-deps /opt/leafcutter/leafcutter
+
+    # Install StringTie from released binaries
+    STRINGTIE_VERSION=2.2.1
+    mkdir -p /opt/stringtie/bin
+    curl -fsSL -o /tmp/stringtie.tar.gz "https://github.com/gpertea/stringtie/releases/download/v${STRINGTIE_VERSION}/stringtie-${STRINGTIE_VERSION}.Linux_x86_64.tar.gz"
+    tar -xzf /tmp/stringtie.tar.gz -C /tmp
+    cp /tmp/stringtie-${STRINGTIE_VERSION}.Linux_x86_64/stringtie /opt/stringtie/bin/
+    rm -rf /tmp/stringtie-${STRINGTIE_VERSION}.Linux_x86_64 /tmp/stringtie.tar.gz
+
+    # Optional MAJIQ install (requires a valid license). Not installed by default; if desired, follow the
+    # official MAJIQ installation guide (https://biociphers.bitbucket.io/majiq-docs-academic/getting-started-guide/installing.html)
+    # and add those steps to a derived definition or writable sandbox rather than using pip here.
+
+    conda deactivate
+
+    ln -s /opt/SpliceHarmonization/src /usr/local/src/SpliceHarmonization
+
+%files
+    ../ /tmp/SpliceHarmonization
+
+%help
+    This image installs SpliceHarmonization along with rMATS, LeafCutter, StringTie, and all conda dependencies
+    inside a Rocky Linux 8 base compatible with Singularity 2.x builds. MAJIQ is not bundled by default; licensed
+    users can extend the definition to install it (see install/Singularity.md). After building:
+
+      singularity exec spliceharmonization.simg bash -lc "source /opt/conda/etc/profile.d/conda.sh; conda activate spliceharmonization; python /opt/SpliceHarmonization/src/spliceharmonization.py -cfig /path/to/config.yml"
+
+%runscript
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate spliceharmonization
+    exec python /opt/SpliceHarmonization/src/spliceharmonization.py "$@"

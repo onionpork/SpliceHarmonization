@@ -16,12 +16,19 @@ SpliceHarmonization requires execution on a high-performance computing (HPC) pla
 - Python
 - R
   
-### Installation 
+### Installation
 - pull SpliceHarmonization from github \
         `git clone https://github.com/interactivereport/SpliceHarmonization.git`
 - enter the folder and install SpliceHarmonization \
         `cd install` \
         `conda create -n env -f install.yml`
+
+### Singularity container (Rocky Linux 8 / Singularity 2.x)
+- A Singularity recipe is available in `install/Singularity.def` with build and usage instructions in `install/Singularity.md`.
+- The image bundles the conda environment from `install/install.yml` plus upstream installs of rMATS, LeafCutter, and StringTie. MAJIQ is not included by default; licensed users should follow the official MAJIQ installation guide (linked from `install/Singularity.md`) to layer it onto a derived image or sandbox.
+- Build example (produces `spliceharmonization.simg`):
+  `sudo singularity build --force spliceharmonization.simg install/Singularity.def`
+  See `install/Singularity.md` for dry-run solving, interactive shell, MAJIQ add-on options, and verification commands.
 
 ### SpliceHarmonization
 - prepare the config.yml and input data 
